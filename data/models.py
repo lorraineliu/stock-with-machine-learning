@@ -20,7 +20,7 @@ class Stock(models.Model):
 
 
 class StockDay(models.Model):
-    stock = models.ForeignKey(Stock, related_name='stock_days', on_delete=models.CASCADE, db_index=True, primary_key=True)
+    stock = models.ForeignKey(Stock, related_name='stock_days', on_delete=models.CASCADE, db_index=True)
     trade_date = models.DateTimeField(default=datetime.datetime.fromtimestamp(0))
     pre_close = models.FloatField(blank=True, default=0.0, null=True)
     open = models.FloatField(blank=True, default=0.0, null=True)
