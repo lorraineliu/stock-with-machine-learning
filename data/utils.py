@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function
 
-import tushare as ts
-from osqa.conf import settings
+from data.models import Stock, StockDay
 
-
-def init_ts_pro_api():
-    pass
+import data.ts_pro

@@ -101,4 +101,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-TUSHARE_TOKEN = '9e78f7edbfc2f5fbd372ca4993b96c60aaa81ac0bdcd6dfb13c6e6e1'
+TUSHARE_PRO_TOKEN = '9e78f7edbfc2f5fbd372ca4993b96c60aaa81ac0bdcd6dfb13c6e6e1'
