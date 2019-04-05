@@ -1,4 +1,5 @@
 appnope==0.1.0
+attrs==19.1.0
 backports-abc==0.5
 backports.functools-lru-cache==1.5
 backports.shutil-get-terminal-size==1.0.0
@@ -49,17 +50,21 @@ prompt-toolkit==1.0.15
 ptyprocess==0.6.0
 Pygments==2.3.1
 pyparsing==2.3.0
+pyrsistent==0.14.11
 python-dateutil==2.7.5
 pytz==2018.7
 pyzmq==17.1.2
 qtconsole==4.4.3
 requests==2.21.0
 scandir==1.9.0
+scikit-learn==0.20.3
+scipy==1.2.1
 Send2Trash==1.5.0
 simplegeneric==0.8.1
 simplejson==3.16.0
 singledispatch==3.4.0.3
 six==1.12.0
+soupsieve==1.9
 subprocess32==3.5.3
 terminado==0.8.1
 testpath==0.4.2

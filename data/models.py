@@ -15,8 +15,21 @@ class Stock(models.Model):
     market = models.CharField(max_length=128, default='')
     exchange = models.CharField(max_length=128, default='')
     status = models.CharField(max_length=128, default='')
-    close_date = models.DateTimeField(default=datetime.datetime.fromtimestamp(0))
     is_hs = models.CharField(max_length=128, default='')
+
+    def to_dict(self):
+        print({
+            'id': self.id,
+            'ts_code': self.ts_code,
+            'code': self.code,
+            'name': self.name,
+            'area': self.area,
+            'industry': self.industry,
+            'market': self.market,
+            'exchange': self.exchange,
+            'status': self.status,
+            'is_hs': self.is_hs,
+             })
 
 
 class StockDay(models.Model):
@@ -53,6 +66,9 @@ class StockDay(models.Model):
     @property
     def code(self):
         return self.stock.code
+
+    def to_dict(self):
+        pass
 
 
 class DayBoll(models.Model):
@@ -113,6 +129,9 @@ class DayBoll(models.Model):
             return []
         pre_20_trade_date = self.trade_date - datetime.timedelta(days=20)
         return self.stock.stock_days.filter(trade_date__lt=self.trade_date, trade_date__gte=pre_20_trade_date)
+
+    def to_dict(self):
+        pass
 
     def set_mid(self):
         if self.pre_day_stock is not None:
