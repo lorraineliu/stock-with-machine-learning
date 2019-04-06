@@ -5,6 +5,7 @@ import datetime
 import logging
 import numpy as np
 import data.ts_pro
+from django.db.models import Q
 from data.models import Stock, StockDay
 
 logger = logging.getLogger('stock.data.utils')
@@ -63,3 +64,11 @@ def import_day_stocks():
             print('stock %s imports daily trades at %d/%d' % (stock.code, index, df_col))
         count += 1
         print('day stocks imports at %d/%d' % (count, stock_count))
+
+
+def revise_nan_ma_20_data():
+    stockdays = StockDay.objects.filter(Q(ma_20=0.0) | Q(ma_vol_20=0.0))
+    if stockdays.count() > 0:
+        for stock_day in stockdays:
+            ma_20, ma_v_20 = stock_day.revise_nan_avg_data()
+            print(stock_day.ts_code, ma_20, ma_v_20)

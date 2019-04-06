@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 from django.db import models
+import numpy as np
 from sklearn.metrics import mean_squared_error
 
 
@@ -68,7 +69,30 @@ class StockDay(models.Model):
         return self.stock.code
 
     def to_dict(self):
-        pass
+        print({
+            'ts_code': self.ts_code,
+            'code': self.code,
+            'trade_code': self.trade_date,
+            'ma_5': self.ma_5,
+            'ma_10': self.ma_10,
+            'ma_20': self.ma_20,
+            'ma_50': self.ma_50,
+            'ma_vol_5': self.ma_vol_5,
+            'ma_vol_10': self.ma_vol_10,
+            'ma_vol_20': self.ma_vol_20,
+            'ma_vol_50': self.ma_vol_50,
+        })
+
+    def revise_nan_avg_data(self, k=20):
+        pre_stockdays = StockDay.objects.filter(stock__ts_code=self.ts_code, trade_date__lt=self.trade_date, trade_date__gte=(self.trade_date - datetime.timedelta(days=k)))
+        close = pre_stockdays.values_list('close', flat=True).order_by('-trade_date')
+        volume = pre_stockdays.values_list('volume', flat=True).order_by('-trade_date')
+        ma = np.mean(close) if len(close) > 0 else 0.0
+        ma_vol = np.mean(volume) if len(volume) > 0 else 0.0
+        setattr(self, 'ma_%d' % k, ma)
+        setattr(self, 'ma_vol_%d' % k, ma_vol)
+        self.save(update_fields=['ma_%d' % k, 'ma_vol_%d' % k])
+        return self.ma_20, self.ma_vol_20
 
 
 class DayBoll(models.Model):
