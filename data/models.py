@@ -92,7 +92,10 @@ class StockDay(models.Model):
         setattr(self, 'ma_%d' % k, ma)
         setattr(self, 'ma_vol_%d' % k, ma_vol)
         self.save(update_fields=['ma_%d' % k, 'ma_vol_%d' % k])
-        return self.ma_20, self.ma_vol_20
+
+    def default_ma_same_as_close(self, k=20):
+        setattr(self, 'ma_%d' % k, self.close)
+        self.save(update_fields=['ma_%d' % k])
 
 
 class DayBoll(models.Model):
@@ -134,9 +137,9 @@ class DayBoll(models.Model):
     def pre_day_stock(self):
         if not all([self.ts_code, self.trade_date]):
             return None
-        pre_trade_date = self.trade_date - datetime.timedelta(days=1)
-        pre_day_stock = self.stock.stock_days.filter(trade_date=pre_trade_date)
-        if pre_day_stock.count() != 1:
+        try:
+            pre_day_stock = StockDay.objects.get(id=(self.daystock.id+1))
+        except StockDay.DoesNotExist:
             return None
         return pre_day_stock
 
@@ -155,7 +158,19 @@ class DayBoll(models.Model):
         return self.stock.stock_days.filter(trade_date__lt=self.trade_date, trade_date__gte=pre_20_trade_date)
 
     def to_dict(self):
-        pass
+        print({
+            'ts_code': self.ts_code,
+            'trade_date': self.trade_date,
+            'daystock_id': self.daystock.id,
+            'md_10': self.md_10,
+            'md_20': self.md_20,
+            'mid_10': self.mid_10,
+            'mid_20': self.mid_20,
+            'upp_10': self.upp_10,
+            'upp_20': self.upp_20,
+            'low_10': self.low_10,
+            'low_20': self.low_20
+        })
 
     def set_mid(self):
         if self.pre_day_stock is not None:
@@ -165,30 +180,40 @@ class DayBoll(models.Model):
 
     def set_md_10(self):
         pre_10_zip_list = [(item.close, item.ma_10) for item in self.pre_10_day_stocks if (item is not None and isinstance(item, StockDay))]
-        pre_10_unzip_list = zip(*pre_10_zip_list)
-        pre_10_close = pre_10_unzip_list[0]
-        pre_10_ma = pre_10_unzip_list[1]
-        md = mean_squared_error(pre_10_close, pre_10_ma)
-        self.md_10 = md
-        self.save(update_fields=['md_10'])
+        try:
+            pre_10_unzip_list = zip(*pre_10_zip_list)
+            pre_10_close = pre_10_unzip_list[0]
+            pre_10_ma = pre_10_unzip_list[1]
+            md = mean_squared_error(pre_10_close, pre_10_ma)
+            self.md_10 = md
+            self.save(update_fields=['md_10'])
+        except Exception as e:
+            pass
 
     def set_md_20(self):
         pre_20_zip_list = [(item.close, item.ma_20) for item in self.pre_20_day_stocks if (item is not None and isinstance(item, StockDay))]
-        pre_20_unzip_list = zip(*pre_20_zip_list)
-        pre_20_close = pre_20_unzip_list[0]
-        pre_20_ma = pre_20_unzip_list[1]
-        md = mean_squared_error(pre_20_close, pre_20_ma)
-        self.md_20 = md
-        self.save(update_fields=['md_20'])
+        try:
+            pre_20_unzip_list = zip(*pre_20_zip_list)
+            pre_20_close = pre_20_unzip_list[0]
+            pre_20_ma = pre_20_unzip_list[1]
+            md = mean_squared_error(pre_20_close, pre_20_ma)
+            self.md_20 = md
+            self.save(update_fields=['md_20'])
+        except Exception as e:
+            pass
 
-    def upp_10(self, k=1.5):
-        return self.mid_10 + k * self.md_10
+    def set_upp_10(self, k=1.5):
+        self.upp_10 = self.mid_10 + k * self.md_10
+        self.save(update_fields=['upp_10'])
 
-    def upp_20(self, k=2):
-        return self.mid_20 + k * self.md_20
+    def set_upp_20(self, k=2):
+        self.upp_20 = self.mid_20 + k * self.md_20
+        self.save(update_fields=['upp_20'])
 
-    def low_10(self, k=1.5):
-        return self.mid_10 - k * self.md_10
+    def set_low_10(self, k=1.5):
+        self.low_10 = self.mid_10 - k * self.md_10
+        self.save(update_fields=['low_10'])
 
-    def low_20(self, k=2):
-        return self.mid_20 - k * self.md_20
+    def set_low_20(self, k=2):
+        self.low_20 = self.mid_20 - k * self.md_20
+        self.save(update_fields=['low_20'])

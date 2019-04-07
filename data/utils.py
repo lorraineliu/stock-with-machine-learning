@@ -6,7 +6,7 @@ import logging
 import numpy as np
 import data.ts_pro
 from django.db.models import Q
-from data.models import Stock, StockDay
+from data.models import Stock, StockDay, DayBoll
 
 logger = logging.getLogger('stock.data.utils')
 
@@ -66,9 +66,65 @@ def import_day_stocks():
         print('day stocks imports at %d/%d' % (count, stock_count))
 
 
+def revise_nan_ma_10_data():
+    stockdays = StockDay.objects.filter(Q(ma_10=0.0) | Q(ma_vol_10=0.0))
+    if stockdays.count() > 0:
+        for stock_day in stockdays:
+            ma, ma_v = stock_day.revise_nan_avg_data(k=10)
+            print(stock_day.ts_code, ma, ma_v)
+
+
 def revise_nan_ma_20_data():
     stockdays = StockDay.objects.filter(Q(ma_20=0.0) | Q(ma_vol_20=0.0))
     if stockdays.count() > 0:
         for stock_day in stockdays:
-            ma_20, ma_v_20 = stock_day.revise_nan_avg_data()
-            print(stock_day.ts_code, ma_20, ma_v_20)
+            ma, ma_v = stock_day.revise_nan_avg_data()
+            print(stock_day.ts_code, ma, ma_v)
+
+
+def make_nan_ma_the_same_as_close():
+    stockdays = StockDay.objects.filter(Q(ma_20=0.0) | Q(ma_vol_20=0.0))
+    if stockdays.count() > 0:
+        for stock_day in stockdays:
+            stock_day.default_ma_same_as_close()
+            print(stock_day.ma_20)
+    stockdays = StockDay.objects.filter(Q(ma_10=0.0) | Q(ma_vol_10=0.0))
+    if stockdays.count() > 0:
+        for stock_day in stockdays:
+            stock_day.default_ma_same_as_close(k=10)
+            print(stock_day.ma_10)
+
+
+def import_day_boll_data():
+    stockdays = StockDay.objects.filter(trade_date__year=2019, day_boll__isnull=True)
+    for stock in stockdays:
+        obj, created = DayBoll.objects.get_or_create(daystock=stock)
+        if not created:
+            obj.to_dict()
+            print('\n***********************************\n')
+            continue
+        obj.set_mid()
+        obj.set_md_10()
+        obj.set_md_20()
+        obj.set_upp_10()
+        obj.set_upp_20()
+        obj.set_low_10()
+        obj.set_low_20()
+        obj.to_dict()
+        print('\n+++++++++++++++++++++++++++++++++++++\n')
+
+
+def import_day_boll_data_by_ts_code(ts_code):
+    stockdays = StockDay.objects.filter(stock__ts_code=ts_code, trade_date__year=2019)
+    if stockdays.count() > 0:
+        for stock in stockdays:
+            obj, created = DayBoll.objects.get_or_create(daystock=stock)
+            obj.set_mid()
+            obj.set_md_10()
+            obj.set_md_20()
+            obj.set_upp_10()
+            obj.set_upp_20()
+            obj.set_low_10()
+            obj.set_low_20()
+            obj.to_dict()
+            print('\n+++++++++++++++++++++++++++++++++++++\n')
