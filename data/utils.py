@@ -31,14 +31,17 @@ def import_stock_basic():
         Stock.objects.get_or_create(**kwargs)
 
 
-def import_day_stocks():
+def import_day_stocks(ts_code=None, start_date=None, end_date=None):
     pro_api = data.ts_pro.init_ts_pro_api()
-    stocks = Stock.objects.all()
+    if ts_code is None:
+        stocks = Stock.objects.all()
+    else:
+        stocks = Stock.ojects.filter(ts_code=str(ts_code))
     stock_count = stocks.count()
     count = 0
     for stock in stocks:
         print('stock code: %s' % stock.ts_code)
-        df = data.ts_pro.get_daily_info_by_ts_code(pro_api, stock.ts_code)
+        df = data.ts_pro.get_daily_info_by_ts_code(pro_api, stock.ts_code, start_date=start_date, end_date=end_date)
         df_col = df.shape[1]
         for index, row in df.iterrows():
             kwargs = {
