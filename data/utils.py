@@ -3,10 +3,12 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 import logging
-import numpy as np
-import data.ts_pro
+
 from django.db.models import Q
-from data.models import Stock, StockDay, DayBoll
+
+import data.ts_pro
+import numpy as np
+from data.models import DayBoll, Stock, StockDay
 
 logger = logging.getLogger('stock.data.utils')
 
@@ -95,14 +97,24 @@ def make_nan_ma_the_same_as_close():
             print(stock_day.ma_10)
 
 
-def import_day_boll_data():
-    stockdays = StockDay.objects.filter(trade_date__year=2019, day_boll__isnull=True)
+def revise_nan_ma_data_by_ts_code(ts_code):
+    stockdays = StockDay.objects.filter(ts_code=ts_code)
+    if stockdays.count() > 0:
+        for stock in stockdays:
+            if stock.ma_20 == 0.0:
+                ma, ma_v = stock.revise_nan_avg_data()
+            if ma == 0.0:
+                stock.default_ma_same_as_close()
+            if stock.ma_10 == 0.0:
+                ma, ma_v = stock.revise_nan_avg_data(k=10)
+            if ma == 0.0:
+                stock.default_ma_same_as_close(k=10)
+
+
+def import_day_boll_data_by_year(year):
+    stockdays = StockDay.objects.filter(trade_date__year=year)
     for stock in stockdays:
         obj, created = DayBoll.objects.get_or_create(daystock=stock)
-        if not created:
-            obj.to_dict()
-            print('\n***********************************\n')
-            continue
         obj.set_mid()
         obj.set_md_10()
         obj.set_md_20()
@@ -114,8 +126,8 @@ def import_day_boll_data():
         print('\n+++++++++++++++++++++++++++++++++++++\n')
 
 
-def import_day_boll_data_by_ts_code(ts_code):
-    stockdays = StockDay.objects.filter(stock__ts_code=ts_code, trade_date__year=2019)
+def import_day_boll_data_by_ts_code_year(ts_code, year):
+    stockdays = StockDay.objects.filter(stock__ts_code=ts_code, trade_date__year=year)
     if stockdays.count() > 0:
         for stock in stockdays:
             obj, created = DayBoll.objects.get_or_create(daystock=stock)
