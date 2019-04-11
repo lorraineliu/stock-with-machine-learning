@@ -140,26 +140,22 @@ class DayBoll(models.Model):
     def pre_day_stock(self):
         if not all([self.ts_code, self.trade_date]):
             return None
-        pre_business_day = self.trade_date - BDay(1)
-        try:
-            pre_day_stock = StockDay.objects.get(trade_date=pre_business_day)
-        except StockDay.DoesNotExist:
-            return None
+        pre_day_stock = StockDay.objects.filter(stock__ts_code=self.ts_code, trade_date__lt=self.trade_date).order_by('-trade_date').first()
         return pre_day_stock
 
     @property
     def pre_10_day_stocks(self):
         if not all([self.ts_code, self.trade_date]):
             return []
-        pre_10_trade_date = self.trade_date - BDay(10)
-        return self.stock.stock_days.filter(trade_date__lt=self.trade_date, trade_date__gte=pre_10_trade_date)
+        pre_10_trade_date = (self.trade_date - BDay(10))
+        return self.stock.stock_days.filter(stock__ts_code=self.ts_code, trade_date__lt=self.trade_date, trade_date__gte=pre_10_trade_date)
 
     @property
     def pre_20_day_stocks(self):
         if not all([self.ts_code, self.trade_date]):
             return []
-        pre_20_trade_date = self.trade_date - BDay(20)
-        return self.stock.stock_days.filter(trade_date__lt=self.trade_date, trade_date__gte=pre_20_trade_date)
+        pre_20_trade_date = (self.trade_date - BDay(20))
+        return self.stock.stock_days.filter(stock__ts_code=self.ts_code, trade_date__lt=self.trade_date, trade_date__gte=pre_20_trade_date)
 
     def to_dict(self):
         print({

@@ -21,4 +21,4 @@ def get_daily_info_by_ts_code(ts_pro, ts_code, start_date='20181201', end_date='
         start_date = '20181201'
     if end_date == '':
         end_date = ps.datetime.today().strftime('%Y%m%d')
-    return ts.pro_bar(api=ts_pro, asset='E', ts_code=ts_code, start_date=start_date, end_date=end_date, ma=[5, 10, 20, 50])
+    return ts.pro_bar(pro_api=ts_pro, asset='E', ts_code=ts_code, start_date=start_date, end_date=end_date, ma=[5, 10, 20, 50])

@@ -36,7 +36,7 @@ def import_day_stocks(ts_code=None, start_date=None, end_date=None):
     if ts_code is None:
         stocks = Stock.objects.all()
     else:
-        stocks = Stock.ojects.filter(ts_code=str(ts_code))
+        stocks = Stock.objects.filter(ts_code=str(ts_code))
     stock_count = stocks.count()
     count = 0
     for stock in stocks:
@@ -101,16 +101,16 @@ def make_nan_ma_the_same_as_close():
 
 
 def revise_nan_ma_data_by_ts_code(ts_code):
-    stockdays = StockDay.objects.filter(ts_code=ts_code)
+    stockdays = StockDay.objects.filter(stock__ts_code=ts_code)
     if stockdays.count() > 0:
         for stock in stockdays:
             if stock.ma_20 == 0.0:
-                ma, ma_v = stock.revise_nan_avg_data()
-            if ma == 0.0:
+                stock.revise_nan_avg_data()
+            if stock.ma_20 == 0.0:
                 stock.default_ma_same_as_close()
             if stock.ma_10 == 0.0:
-                ma, ma_v = stock.revise_nan_avg_data(k=10)
-            if ma == 0.0:
+                stock.revise_nan_avg_data(k=10)
+            if stock.ma_10 == 0.0:
                 stock.default_ma_same_as_close(k=10)
 
 
@@ -143,3 +143,9 @@ def import_day_boll_data_by_ts_code_year(ts_code, year):
             obj.set_low_20()
             obj.to_dict()
             print('\n+++++++++++++++++++++++++++++++++++++\n')
+
+
+def last_business_day(date):
+    lastBusDay = date
+    shift = datetime.timedelta(max(1, (lastBusDay.weekday() + 6) % 7 - 3))
+    return lastBusDay - shift
